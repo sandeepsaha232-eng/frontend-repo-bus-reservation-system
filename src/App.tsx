@@ -421,9 +421,9 @@ function Home({
               Trusted by 2M+ travelers
             </div>
             <h1>
-              Your next journey,
+              The journey is yours.
               <br />
-              <em>beautifully simple.</em>
+              <em>Make it unforgettable.</em>
             </h1>
             <p>
               Compare routes, choose your perfect seat, and hit the road with
@@ -445,6 +445,18 @@ function Home({
             </div>
           </div>
           <div className="route-visual" aria-hidden="true">
+            <svg className="hero-route" viewBox="0 0 540 310" fill="none">
+              <path
+                className="hero-route-track"
+                d="M56 265C104 265 98 206 158 206S225 265 276 231 328 118 380 139s51 82 106 39"
+              />
+              <path
+                className="hero-route-glow"
+                d="M56 265C104 265 98 206 158 206S225 265 276 231 328 118 380 139s51 82 106 39"
+              />
+              <circle cx="56" cy="265" r="6" className="route-origin" />
+              <circle cx="486" cy="178" r="7" className="route-destination" />
+            </svg>
             <div className="visual-card route-mini">
               <div>
                 <span className="route-dot blue" />
@@ -483,6 +495,20 @@ function Home({
                 <small>Ticket ready in seconds</small>
               </div>
             </div>
+            <div className="ticket-float">
+              <span className="ticket-float-mark">
+                <Icon name="ticket" size={16} />
+              </span>
+              <span>
+                <small>YOUR NEXT STOP</small>
+                <b>Boston, MA</b>
+              </span>
+              <span className="ticket-float-time">4h 45m</span>
+            </div>
+            <span className="destination-stamp">
+              42° 21′ N<br />
+              71° 03′ W
+            </span>
           </div>
         </div>
         <div className="container search-wrap">
@@ -535,6 +561,16 @@ function Home({
           </button>
         </div>
         <div className="route-cards">
+          <svg
+            className="route-thread"
+            viewBox="0 0 1200 260"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path d="M22 184C170 184 154 94 310 94S453 217 596 183 757 67 875 107s167 92 303 20" />
+            <circle cx="22" cy="184" r="5" />
+            <circle cx="1178" cy="127" r="6" />
+          </svg>
           {[
             ["New York", "Boston", "4h 45m", "$29", "18 departures"],
             ["Los Angeles", "San Francisco", "6h 10m", "$39", "12 departures"],
@@ -542,8 +578,20 @@ function Home({
           ].map((r, i) => (
             <button className="route-card" key={r[1]} onClick={onSearch}>
               <div className={`city-art art-${i + 1}`}>
-                <Icon name="bus" size={32} />
-                <span>{r[2]}</span>
+                <span className="poster-coordinates">
+                  {
+                    [
+                      "40° 43′ N · 74° 00′ W",
+                      "37° 46′ N · 122° 25′ W",
+                      "41° 52′ N · 87° 37′ W",
+                    ][i]
+                  }
+                </span>
+                <b className="poster-city">{i === 1 ? r[1] : r[0]}</b>
+                <span className="poster-route">
+                  <Icon name="location" size={13} /> {r[0]} <i /> {r[2]}
+                </span>
+                <span className="poster-index">0{i + 1}</span>
               </div>
               <div className="route-card-body">
                 <div className="route-names">
