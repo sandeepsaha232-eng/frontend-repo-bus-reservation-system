@@ -1,5 +1,4 @@
 import { FormEvent, ReactNode, useMemo, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
 
 type View = "home" | "results" | "seats" | "details" | "payment" | "confirmation" | "bookings" | "support"
 
@@ -310,76 +309,65 @@ function App() {
       </header>
 
       <main>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={view}
-            className="view-transition"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {view === "home" && (
-              <Home
-                onSearch={() => navigate("results")}
-                onSupport={() => navigate("support")}
-              />
-            )}
-            {view === "results" && (
-              <Results
-                buses={buses}
-                sort={sort}
-                setSort={setSort}
-                maxPrice={maxPrice}
-                setMaxPrice={setMaxPrice}
-                busType={busType}
-                setBusType={setBusType}
-                onSelect={() => navigate("seats")}
-              />
-            )}
-            {view === "seats" && (
-              <Seats
-                selected={selectedSeats}
-                setSelected={setSelectedSeats}
-                onBack={() => navigate("results")}
-                onContinue={() => navigate("details")}
-              />
-            )}
-            {view === "details" && (
-              <Details
-                traveler={traveler}
-                setTraveler={setTraveler}
-                selected={selectedSeats}
-                onBack={() => navigate("seats")}
-                onContinue={() => navigate("payment")}
-              />
-            )}
-            {view === "payment" && (
-              <Payment
-                selected={selectedSeats}
-                onBack={() => navigate("details")}
-                onPay={() => navigate("confirmation")}
-              />
-            )}
-            {view === "confirmation" && (
-              <Confirmation
-                selected={selectedSeats}
-                traveler={traveler}
-                onBookings={() => navigate("bookings")}
-                showToast={showToast}
-              />
-            )}
-            {view === "bookings" && (
-              <Bookings
-                cancelled={cancelled}
-                onCancel={() => setCancelled(true)}
-                onReschedule={() => setReschedule(true)}
-                onExplore={() => navigate("home")}
-              />
-            )}
-            {view === "support" && <Support showToast={showToast} />}
-          </motion.div>
-        </AnimatePresence>
+        {view === "home" && (
+          <Home
+            onSearch={() => navigate("results")}
+            onSupport={() => navigate("support")}
+          />
+        )}
+        {view === "results" && (
+          <Results
+            buses={buses}
+            sort={sort}
+            setSort={setSort}
+            maxPrice={maxPrice}
+            setMaxPrice={setMaxPrice}
+            busType={busType}
+            setBusType={setBusType}
+            onSelect={() => navigate("seats")}
+          />
+        )}
+        {view === "seats" && (
+          <Seats
+            selected={selectedSeats}
+            setSelected={setSelectedSeats}
+            onBack={() => navigate("results")}
+            onContinue={() => navigate("details")}
+          />
+        )}
+        {view === "details" && (
+          <Details
+            traveler={traveler}
+            setTraveler={setTraveler}
+            selected={selectedSeats}
+            onBack={() => navigate("seats")}
+            onContinue={() => navigate("payment")}
+          />
+        )}
+        {view === "payment" && (
+          <Payment
+            selected={selectedSeats}
+            onBack={() => navigate("details")}
+            onPay={() => navigate("confirmation")}
+          />
+        )}
+        {view === "confirmation" && (
+          <Confirmation
+            selected={selectedSeats}
+            traveler={traveler}
+            onBookings={() => navigate("bookings")}
+            showToast={showToast}
+          />
+        )}
+        {view === "bookings" && (
+          <Bookings
+            cancelled={cancelled}
+            onCancel={() => setCancelled(true)}
+            onReschedule={() => setReschedule(true)}
+            onExplore={() => navigate("home")}
+          />
+        )}
+        {view === "support" && <Support showToast={showToast} />}
       </main>
 
       <Footer navigate={navigate} />
@@ -456,13 +444,7 @@ function Home({
               </div>
             </div>
           </div>
-          <motion.div
-            className="route-visual"
-            aria-hidden="true"
-            initial={{ opacity: 0, scale: 0.96, y: 18 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-          >
+          <div className="route-visual" aria-hidden="true">
             <div className="visual-card route-mini">
               <div>
                 <span className="route-dot blue" />
@@ -492,7 +474,6 @@ function Home({
               <i className="wheel one" />
               <i className="wheel two" />
             </div>
-            <WaitingScene />
             <div className="floating-badge">
               <span>
                 <Icon name="check" size={15} />
@@ -502,15 +483,10 @@ function Home({
                 <small>Ticket ready in seconds</small>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
         <div className="container search-wrap">
-          <motion.div
-            className="search-card"
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          >
+          <div className="search-card">
             <SearchField
               icon="location"
               label="From"
@@ -544,17 +520,11 @@ function Home({
             <button className="button search-cta" onClick={onSearch}>
               <Icon name="search" size={19} /> Search buses
             </button>
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      <motion.section
-        className="section container"
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.12 }}
-        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-      >
+      <section className="section container">
         <div className="section-heading split">
           <div>
             <span className="kicker">POPULAR ROUTES</span>
@@ -593,15 +563,9 @@ function Home({
             </button>
           ))}
         </div>
-      </motion.section>
+      </section>
 
-      <motion.section
-        className="section soft-section"
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.12 }}
-        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-      >
+      <section className="section soft-section">
         <div className="container">
           <div className="section-heading centered">
             <span className="kicker">WHY ROUTELY</span>
@@ -632,7 +596,7 @@ function Home({
             />
           </div>
         </div>
-      </motion.section>
+      </section>
     </>
   )
 }
@@ -659,60 +623,6 @@ function SearchField({
         <em>{sub}</em>
       </span>
     </button>
-  )
-}
-
-function WaitingScene() {
-  return (
-    <svg
-      className="waiting-scene"
-      viewBox="0 0 480 320"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <ellipse cx="249" cy="275" rx="191" ry="23" fill="#162547" opacity=".34" />
-      <path d="M92 256h285" stroke="#A8C2FF" strokeOpacity=".3" strokeWidth="2" />
-      <path d="M133 132h180v15H133z" fill="#AFC6F8" />
-      <path d="M147 147h13v91h-13zM288 147h13v91h-13z" fill="#7892C9" />
-      <path d="M125 131c0-5 4-9 9-9h178c5 0 9 4 9 9v8H125v-8Z" fill="#E4ECFF" />
-      <path d="M153 242h10v18h-10zM286 242h10v18h-10z" fill="#536B9A" />
-      <g className="scene-person scene-person-left">
-        <path d="M111 111c0-17 11-27 24-27s24 10 24 27v18h-48v-18Z" fill="#F2B69A" />
-        <path d="M109 108c0-20 11-32 27-32 15 0 25 12 25 28-8-3-15-9-18-17-7 11-19 18-34 21Z" fill="#342A49" />
-        <path d="M116 130h38l9 54-12 4-8-32-3 59h-13l-2-45-10 45h-13l12-64-9-21Z" fill="#F2B69A" />
-        <path d="M116 130h38l8 46-22 8-24-11 3-43-3 42-11-3 2-27 9-12Z" fill="#FF956F" />
-        <path d="m125 214 12 1-3 39h-16l7-40ZM148 215l12-3 10 36-15 5-7-38Z" fill="#5469B6" />
-        <path d="M116 251h19v7h-22c-4 0-5-4-1-6l4-1ZM155 249l15-3 7 6c2 2 0 5-3 5h-20l1-8Z" fill="#F7F1E8" />
-      </g>
-      <g className="scene-person scene-person-sitting">
-        <path d="M199 111c0-15 9-24 21-24 13 0 22 9 22 24v13h-43v-13Z" fill="#C77E64" />
-        <path d="M197 108c1-18 10-28 25-28 12 0 21 9 22 25-9 0-17-5-22-12-5 8-14 13-25 15Z" fill="#292946" />
-        <path d="m198 128 39-2 7 42-15 17-34-12-4-28 7-17Z" fill="#72A8D9" />
-        <path d="m199 163 29 8 18 27-10 9-25-20-20-12 8-12Z" fill="#C77E64" />
-        <path d="m224 174 23 15 12 28-13 6-16-21-19-15 13-13Z" fill="#C77E64" />
-        <path d="m227 187 15 9 20 25-12 8-23-21-16-10 16-11Z" fill="#5662A2" />
-        <path d="m243 216 12-6 14 17-7 7-18-8-1-10ZM229 217l14 7-4 14-24-1-3-5 17-15Z" fill="#F7F1E8" />
-      </g>
-      <g className="scene-person scene-person-right">
-        <path d="M328 101c0-16 10-26 23-26 14 0 24 10 24 26v14h-47v-14Z" fill="#A7654D" />
-        <path d="M326 100c1-19 11-31 27-31 14 0 23 11 24 27-9-2-17-7-21-15-7 11-17 17-30 19Z" fill="#24263E" />
-        <path d="m329 119 39-1 6 55-7 41h-13l-2-37-8 39h-14l5-51-13-24 7-22Z" fill="#70B7A5" />
-        <path d="m330 127-18 37 7 6 25-29-14-14Z" fill="#A7654D" />
-        <path d="m365 126 15 31-7 7-20-25 12-13Z" fill="#A7654D" />
-        <path d="m342 208 14 3-2 39h-17l5-42ZM361 211l13-3 9 40-15 2-7-39Z" fill="#685B9B" />
-        <path d="M337 248h18v8h-22c-3 0-4-3-1-5l5-3ZM368 247l16-1 6 7c1 2 0 4-3 4h-19v-10Z" fill="#F7F1E8" />
-      </g>
-      <g className="scene-suitcase">
-        <path d="M386 190h36c5 0 9 4 9 9v49h-54v-49c0-5 4-9 9-9Z" fill="#FFB17C" />
-        <path d="M396 190v-8c0-5 4-9 9-9h2c5 0 9 4 9 9v8" stroke="#F5D7BE" strokeWidth="4" />
-        <path d="M395 193v53M413 193v53" stroke="#E68F69" strokeWidth="2" />
-        <circle cx="390" cy="252" r="4" fill="#3E4F77" />
-        <circle cx="419" cy="252" r="4" fill="#3E4F77" />
-      </g>
-      <g className="scene-sparkles" fill="#D6E4FF">
-        <path d="m79 84 3 8 8 3-8 3-3 8-3-8-8-3 8-3 3-8ZM406 73l2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6ZM350 48l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" />
-      </g>
-    </svg>
   )
 }
 
