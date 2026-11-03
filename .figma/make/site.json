@@ -1,0 +1,10 @@
+{
+  "description": "Streamlined bus booking platform enabling users to search, compare, and reserve seats across routes with real-time availability, secure payment processing, and instant digital tickets with QR codes.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
