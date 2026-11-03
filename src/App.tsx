@@ -1,6 +1,28 @@
 import { FormEvent, ReactNode, useMemo, useState } from "react"
 
 type View = "home" | "results" | "seats" | "details" | "payment" | "confirmation" | "bookings" | "support"
+interface SearchTrip {
+  from: string
+  to: string
+  date: string
+  passengers: number
+}
+
+function formatTripDate(value: string) {
+  if (!value) return "Choose date"
+  return new Intl.DateTimeFormat("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(`${value}T00:00:00`))
+}
+
+function dateOffset(days: number) {
+  const date = new Date()
+  date.setDate(date.getDate() + days)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+}
 
 type IconName = "arrow" | "back" | "bus" | "calendar" | "card" | "check" | "chevron" | "clock" | "close" | "headset" | "location" | "lock" | "mail" | "moon" | "passengers" | "phone" | "search" | "shield" | "star" | "sun" | "swap" | "ticket" | "user" | "wifi"
 
@@ -160,10 +182,10 @@ const initialBuses = [
     id: 1,
     operator: "Velora Express",
     type: "Executive Sleeper",
-    depart: "07:30",
-    arrive: "12:15",
-    duration: "4h 45m",
-    price: 38,
+    depart: "06:30",
+    arrive: "17:00",
+    duration: "10h 30m",
+    price: 1299,
     rating: 4.9,
     reviews: 842,
     seats: 7,
@@ -173,10 +195,10 @@ const initialBuses = [
     id: 2,
     operator: "Skyline Coaches",
     type: "Luxury AC Seater",
-    depart: "09:15",
-    arrive: "14:30",
-    duration: "5h 15m",
-    price: 29,
+    depart: "08:15",
+    arrive: "20:25",
+    duration: "12h 10m",
+    price: 999,
     rating: 4.7,
     reviews: 638,
     seats: 12,
@@ -186,10 +208,10 @@ const initialBuses = [
     id: 3,
     operator: "Northbound",
     type: "Premium Sleeper",
-    depart: "22:00",
-    arrive: "03:40",
-    duration: "5h 40m",
-    price: 34,
+    depart: "21:00",
+    arrive: "08:45",
+    duration: "11h 45m",
+    price: 1499,
     rating: 4.6,
     reviews: 415,
     seats: 5,
@@ -201,7 +223,20 @@ function Logo({ onClick }: { onClick: () => void }) {
   return (
     <button className="logo" onClick={onClick} aria-label="Go to home">
       <span className="logo-mark">
-        <Icon name="bus" size={23} />
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path
+            className="logo-sun"
+            d="M7 23a16 16 0 0 1 27-11M9 10l4 4M20 5l1 6M4 20h6"
+          />
+          <path
+            className="logo-bus"
+            d="M10 26c0-5 4-8 12-8h14c3 0 5 2 5 5v13H10V26Z"
+          />
+          <path className="logo-bus-window" d="M16 23h18v7H16z" />
+          <path className="logo-bus-detail" d="M12 34h27M20 38v3m14-3v3" />
+          <circle className="logo-wheel" cx="17" cy="37" r="2.5" />
+          <circle className="logo-wheel" cx="34" cy="37" r="2.5" />
+        </svg>
       </span>
       <span>
         Route<span>ly</span>
@@ -216,17 +251,23 @@ function App() {
   const [authOpen, setAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState<"login" | "signup">("login")
   const [sort, setSort] = useState("recommended")
-  const [maxPrice, setMaxPrice] = useState(60)
+  const [maxPrice, setMaxPrice] = useState(1800)
   const [busType, setBusType] = useState("All types")
   const [selectedSeats, setSelectedSeats] = useState<string[]>(["2A", "2B"])
   const [cancelled, setCancelled] = useState(false)
   const [reschedule, setReschedule] = useState(false)
   const [toast, setToast] = useState("")
+  const [trip, setTrip] = useState<SearchTrip>({
+    from: "Bengaluru",
+    to: "Goa",
+    date: dateOffset(2),
+    passengers: 2,
+  })
   const [traveler, setTraveler] = useState({
-    first: "Alex",
-    last: "Morgan",
-    email: "alex.morgan@example.com",
-    phone: "+1 (555) 123-4567",
+    first: "Aarav",
+    last: "Sharma",
+    email: "aarav.sharma@example.in",
+    phone: "+91 98765 43210",
   })
 
   const buses = useMemo(
@@ -242,6 +283,24 @@ function App() {
   const navigate = (next: View) => {
     setView(next)
     window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const searchTrips = (nextTrip = trip) => {
+    if (!nextTrip.from.trim() || !nextTrip.to.trim()) {
+      showToast("Enter both your starting point and destination")
+      return
+    }
+    if (
+      nextTrip.from.trim().toLowerCase() === nextTrip.to.trim().toLowerCase()
+    ) {
+      showToast("Choose two different cities for your journey")
+      return
+    }
+    setTrip(nextTrip)
+    setSelectedSeats(
+      ["2A", "2B", "2C", "2D", "4A", "4B"].slice(0, nextTrip.passengers),
+    )
+    navigate("results")
   }
 
   const showToast = (message: string) => {
@@ -311,13 +370,16 @@ function App() {
       <main>
         {view === "home" && (
           <Home
-            onSearch={() => navigate("results")}
+            trip={trip}
+            setTrip={setTrip}
+            onSearch={searchTrips}
             onSupport={() => navigate("support")}
           />
         )}
         {view === "results" && (
           <Results
             buses={buses}
+            trip={trip}
             sort={sort}
             setSort={setSort}
             maxPrice={maxPrice}
@@ -325,10 +387,12 @@ function App() {
             busType={busType}
             setBusType={setBusType}
             onSelect={() => navigate("seats")}
+            onModify={() => navigate("home")}
           />
         )}
         {view === "seats" && (
           <Seats
+            trip={trip}
             selected={selectedSeats}
             setSelected={setSelectedSeats}
             onBack={() => navigate("results")}
@@ -337,6 +401,7 @@ function App() {
         )}
         {view === "details" && (
           <Details
+            trip={trip}
             traveler={traveler}
             setTraveler={setTraveler}
             selected={selectedSeats}
@@ -346,6 +411,7 @@ function App() {
         )}
         {view === "payment" && (
           <Payment
+            trip={trip}
             selected={selectedSeats}
             onBack={() => navigate("details")}
             onPay={() => navigate("confirmation")}
@@ -353,6 +419,7 @@ function App() {
         )}
         {view === "confirmation" && (
           <Confirmation
+            trip={trip}
             selected={selectedSeats}
             traveler={traveler}
             onBookings={() => navigate("bookings")}
@@ -361,6 +428,7 @@ function App() {
         )}
         {view === "bookings" && (
           <Bookings
+            trip={trip}
             cancelled={cancelled}
             onCancel={() => setCancelled(true)}
             onReschedule={() => setReschedule(true)}
@@ -401,10 +469,14 @@ function App() {
 }
 
 function Home({
+  trip,
+  setTrip,
   onSearch,
   onSupport,
 }: {
-  onSearch: () => void
+  trip: SearchTrip
+  setTrip: (trip: SearchTrip) => void
+  onSearch: (trip?: SearchTrip) => void
   onSupport: () => void
 }) {
   return (
@@ -460,16 +532,16 @@ function Home({
             <div className="visual-card route-mini">
               <div>
                 <span className="route-dot blue" />
-                <b>New York</b>
-                <small>Port Authority</small>
+                <b>Bengaluru</b>
+                <small>Kempegowda Bus Station</small>
               </div>
               <div className="route-line">
-                <span>4h 45m</span>
+                <span>10h 30m</span>
               </div>
               <div>
                 <span className="route-dot orange" />
-                <b>Boston</b>
-                <small>South Station</small>
+                <b>Goa</b>
+                <small>Panaji Bus Stand</small>
               </div>
             </div>
             <div className="bus-illustration">
@@ -501,49 +573,60 @@ function Home({
               </span>
               <span>
                 <small>YOUR NEXT STOP</small>
-                <b>Boston, MA</b>
+                <b>Goa, India</b>
               </span>
               <span className="ticket-float-time">4h 45m</span>
             </div>
             <span className="destination-stamp">
-              42° 21′ N<br />
-              71° 03′ W
+              12° 58′ N<br />
+              77° 35′ E
             </span>
           </div>
         </div>
         <div className="container search-wrap">
           <div className="search-card">
-            <SearchField
-              icon="location"
+            <LocationField
               label="From"
-              value="New York, NY"
-              sub="Port Authority Bus Terminal"
+              value={trip.from}
+              onChange={(from) => setTrip({ ...trip, from })}
+              suggestions={[
+                "Bengaluru",
+                "Mumbai",
+                "Delhi",
+                "Chennai",
+                "Hyderabad",
+                "Pune",
+              ]}
             />
             <button
               className="swap-button"
               aria-label="Swap origin and destination"
+              onClick={() => setTrip({ ...trip, from: trip.to, to: trip.from })}
             >
               <Icon name="swap" size={18} />
             </button>
-            <SearchField
-              icon="location"
+            <LocationField
               label="To"
-              value="Boston, MA"
-              sub="South Station"
+              value={trip.to}
+              onChange={(to) => setTrip({ ...trip, to })}
+              suggestions={[
+                "Goa",
+                "Jaipur",
+                "Kochi",
+                "Varanasi",
+                "Agra",
+                "Mysuru",
+              ]}
             />
-            <SearchField
-              icon="calendar"
-              label="Departure"
-              value="Fri, Jun 20"
-              sub="Tomorrow"
+            <DatePickerField
+              value={trip.date}
+              onChange={(date) => setTrip({ ...trip, date })}
             />
-            <SearchField
-              icon="passengers"
-              label="Passengers"
-              value="2 passengers"
-              sub="Adults"
+            <PassengerPicker
+              value={trip.passengers}
+              onChange={(passengers) => setTrip({ ...trip, passengers })}
             />
-            <button className="button search-cta" onClick={onSearch}>
+            <button className="button search-cta" onClick={() => onSearch()}>
               <Icon name="search" size={19} /> Search buses
             </button>
           </div>
@@ -556,7 +639,7 @@ function Home({
             <span className="kicker">POPULAR ROUTES</span>
             <h2>Where are you headed?</h2>
           </div>
-          <button className="text-link" onClick={onSearch}>
+          <button className="text-link" onClick={() => onSearch()}>
             Explore all routes <Icon name="arrow" size={17} />
           </button>
         </div>
@@ -572,22 +655,29 @@ function Home({
             <circle cx="1178" cy="127" r="6" />
           </svg>
           {[
-            ["New York", "Boston", "4h 45m", "$29", "18 departures"],
-            ["Los Angeles", "San Francisco", "6h 10m", "$39", "12 departures"],
-            ["Chicago", "Detroit", "4h 20m", "$24", "9 departures"],
+            ["Bengaluru", "Goa", "10h 30m", "₹999", "18 departures"],
+            ["Mumbai", "Pune", "3h 30m", "₹499", "24 departures"],
+            ["Delhi", "Agra", "3h 30m", "₹699", "16 departures"],
           ].map((r, i) => (
-            <button className="route-card" key={r[1]} onClick={onSearch}>
+            <button
+              className="route-card"
+              key={r[1]}
+              onClick={() => {
+                setTrip({ ...trip, from: r[0], to: r[1] })
+                onSearch({ ...trip, from: r[0], to: r[1] })
+              }}
+            >
               <div className={`city-art art-${i + 1}`}>
                 <span className="poster-coordinates">
                   {
                     [
-                      "40° 43′ N · 74° 00′ W",
-                      "37° 46′ N · 122° 25′ W",
-                      "41° 52′ N · 87° 37′ W",
+                      "15° 29′ N · 73° 49′ E",
+                      "19° 04′ N · 72° 52′ E",
+                      "27° 10′ N · 78° 02′ E",
                     ][i]
                   }
                 </span>
-                <b className="poster-city">{i === 1 ? r[1] : r[0]}</b>
+                <b className="poster-city">{i === 1 ? r[0] : r[1]}</b>
                 <span className="poster-route">
                   <Icon name="location" size={13} /> {r[0]} <i /> {r[2]}
                 </span>
@@ -649,28 +739,174 @@ function Home({
   )
 }
 
-function SearchField({
-  icon,
+function LocationField({
   label,
   value,
-  sub,
+  onChange,
+  suggestions,
 }: {
-  icon: IconName
   label: string
   value: string
-  sub: string
+  onChange: (value: string) => void
+  suggestions: string[]
 }) {
+  const [open, setOpen] = useState(false)
   return (
-    <button className="search-field">
+    <div className="search-control location-control">
       <span className="field-icon">
-        <Icon name={icon} size={20} />
+        <Icon name="location" size={20} />
       </span>
-      <span>
-        <small>{label}</small>
-        <b>{value}</b>
-        <em>{sub}</em>
-      </span>
-    </button>
+      <div className="location-input">
+        <label htmlFor={`trip-${label.toLowerCase()}`}>{label}</label>
+        <input
+          id={`trip-${label.toLowerCase()}`}
+          value={value}
+          aria-label={label}
+          placeholder={`Enter ${label.toLowerCase()} city`}
+          onFocus={() => setOpen(true)}
+          onChange={(event) => {
+            onChange(event.target.value)
+            setOpen(true)
+          }}
+          onBlur={() => window.setTimeout(() => setOpen(false), 120)}
+        />
+        {open && (
+          <div className="search-popover city-popover">
+            <small>POPULAR IN INDIA</small>
+            {suggestions
+              .filter((city) =>
+                city.toLowerCase().includes(value.toLowerCase()),
+              )
+              .map((city) => (
+                <button
+                  type="button"
+                  key={city}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    onChange(city)
+                    setOpen(false)
+                  }}
+                >
+                  <Icon name="location" size={15} /> {city}
+                </button>
+              ))}
+            {value &&
+              !suggestions.some(
+                (city) => city.toLowerCase() === value.toLowerCase(),
+              ) && <span className="custom-city">Use “{value}”</span>}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function DatePickerField({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (value: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const formatted = value
+    ? new Intl.DateTimeFormat("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(new Date(`${value}T00:00:00`))
+    : "Choose date"
+  return (
+    <div className="picker-wrap">
+      <button
+        className="search-field"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+      >
+        <span className="field-icon">
+          <Icon name="calendar" size={20} />
+        </span>
+        <span>
+          <small>Departure</small>
+          <b>{formatted}</b>
+          <em>Choose a travel date</em>
+        </span>
+      </button>
+      {open && (
+        <div className="search-popover date-popover">
+          <label>
+            <small>SELECT DEPARTURE DATE</small>
+            <input
+              type="date"
+              min={dateOffset(0)}
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+            />
+          </label>
+          <button className="popover-done" onClick={() => setOpen(false)}>
+            Done
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PassengerPicker({
+  value,
+  onChange,
+}: {
+  value: number
+  onChange: (value: number) => void
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="picker-wrap">
+      <button
+        className="search-field"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+      >
+        <span className="field-icon">
+          <Icon name="passengers" size={20} />
+        </span>
+        <span>
+          <small>Passengers</small>
+          <b>
+            {value} {value === 1 ? "passenger" : "passengers"}
+          </b>
+          <em>Adults</em>
+        </span>
+      </button>
+      {open && (
+        <div className="search-popover passenger-popover">
+          <div>
+            <span>
+              <b>Adults</b>
+              <small>Ages 12+</small>
+            </span>
+            <div className="passenger-stepper">
+              <button
+                onClick={() => onChange(Math.max(1, value - 1))}
+                aria-label="Remove passenger"
+              >
+                −
+              </button>
+              <b>{value}</b>
+              <button
+                onClick={() => onChange(Math.min(6, value + 1))}
+                aria-label="Add passenger"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <button className="popover-done" onClick={() => setOpen(false)}>
+            Done
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -696,38 +932,42 @@ function Benefit({
   )
 }
 
-function TripSummary() {
+function TripSummary({ trip }: { trip: SearchTrip }) {
+  const date = formatTripDate(trip.date)
   return (
     <div className="trip-summary">
       <div>
         <small>FROM</small>
-        <b>New York</b>
-        <span>Port Authority</span>
+        <b>{trip.from}</b>
+        <span>Bus station</span>
       </div>
       <div className="summary-track">
-        <span>07:30</span>
+        <span>06:30</span>
         <i />
-        <span>4h 45m</span>
+        <span>10h 30m</span>
         <i />
-        <span>12:15</span>
+        <span>17:00</span>
       </div>
       <div>
         <small>TO</small>
-        <b>Boston</b>
-        <span>South Station</span>
+        <b>{trip.to}</b>
+        <span>Bus station</span>
       </div>
       <div className="date-summary">
         <Icon name="calendar" size={18} />
         <span>
           <small>DEPARTURE</small>
-          <b>Fri, Jun 20</b>
+          <b>{date}</b>
         </span>
       </div>
       <div className="date-summary">
         <Icon name="passengers" size={18} />
         <span>
           <small>TRAVELERS</small>
-          <b>2 passengers</b>
+          <b>
+            {trip.passengers}{" "}
+            {trip.passengers === 1 ? "passenger" : "passengers"}
+          </b>
         </span>
       </div>
     </div>
@@ -736,6 +976,7 @@ function TripSummary() {
 
 function Results({
   buses,
+  trip,
   sort,
   setSort,
   maxPrice,
@@ -743,8 +984,10 @@ function Results({
   busType,
   setBusType,
   onSelect,
+  onModify,
 }: {
   buses: typeof initialBuses
+  trip: SearchTrip
   sort: string
   setSort: (v: string) => void
   maxPrice: number
@@ -752,20 +995,26 @@ function Results({
   busType: string
   setBusType: (v: string) => void
   onSelect: () => void
+  onModify: () => void
 }) {
   return (
     <div className="page-bg">
       <div className="container page-pad">
         <div className="back-row">
-          <button>
+          <button onClick={onModify}>
             <Icon name="back" size={17} /> Modify search
           </button>
         </div>
-        <TripSummary />
+        <TripSummary trip={trip} />
         <div className="results-header">
           <div>
-            <h1>Buses from New York to Boston</h1>
-            <p>{buses.length || "No"} options for Friday, June 20</p>
+            <h1>
+              Buses from {trip.from} to {trip.to}
+            </h1>
+            <p>
+              {buses.length || "No"} options for {formatTripDate(trip.date)} ·{" "}
+              {trip.passengers} travelers
+            </p>
           </div>
           <label>
             Sort by{" "}
@@ -782,7 +1031,7 @@ function Results({
               <h3>Filters</h3>
               <button
                 onClick={() => {
-                  setMaxPrice(60)
+                  setMaxPrice(1800)
                   setBusType("All types")
                 }}
               >
@@ -791,18 +1040,18 @@ function Results({
             </div>
             <div className="filter-group">
               <label>
-                Price range <b>Up to ${maxPrice}</b>
+                Price range <b>Up to ₹{maxPrice.toLocaleString("en-IN")}</b>
               </label>
               <input
                 type="range"
-                min="24"
-                max="60"
+                min="499"
+                max="1800"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
               />
               <div className="range-labels">
-                <span>$24</span>
-                <span>$60+</span>
+                <span>₹499</span>
+                <span>₹1,800+</span>
               </div>
             </div>
             <div className="filter-group">
@@ -848,7 +1097,12 @@ function Results({
           <div className="bus-list">
             {buses.length ? (
               buses.map((bus) => (
-                <BusCard key={bus.id} bus={bus} onSelect={onSelect} />
+                <BusCard
+                  key={bus.id}
+                  bus={bus}
+                  trip={trip}
+                  onSelect={onSelect}
+                />
               ))
             ) : (
               <div className="empty-card">
@@ -886,9 +1140,11 @@ function CheckRow({
 
 function BusCard({
   bus,
+  trip,
   onSelect,
 }: {
   bus: typeof initialBuses[number]
+  trip: SearchTrip
   onSelect: () => void
 }) {
   return (
@@ -910,8 +1166,8 @@ function BusCard({
       <div className="schedule">
         <div>
           <b>{bus.depart}</b>
-          <span>New York</span>
-          <small>Port Authority</small>
+          <span>{trip.from}</span>
+          <small>Main bus terminal</small>
         </div>
         <div className="journey-line">
           <span>{bus.duration}</span>
@@ -922,8 +1178,8 @@ function BusCard({
         </div>
         <div className="right">
           <b>{bus.arrive}</b>
-          <span>Boston</span>
-          <small>South Station</small>
+          <span>{trip.to}</span>
+          <small>Main bus terminal</small>
         </div>
       </div>
       <div className="amenities">
@@ -940,7 +1196,7 @@ function BusCard({
         <span className="seats-left">{bus.seats} seats left</span>
         <div className="price">
           <small>from</small>
-          <b>${bus.price}</b>
+          <b>₹{bus.price.toLocaleString("en-IN")}</b>
           <span>/ person</span>
         </div>
         <button className="button" onClick={onSelect}>
@@ -966,11 +1222,13 @@ function Stepper({ active }: { active: number }) {
 }
 
 function Seats({
+  trip,
   selected,
   setSelected,
   onBack,
   onContinue,
 }: {
+  trip: SearchTrip
   selected: string[]
   setSelected: (v: string[]) => void
   onBack: () => void
@@ -998,7 +1256,9 @@ function Seats({
         <div className="booking-title">
           <span className="kicker">VELORA EXPRESS · VB 203</span>
           <h1>Choose your seats</h1>
-          <p>New York to Boston · Friday, June 20 · 07:30</p>
+          <p>
+            {trip.from} to {trip.to} · {formatTripDate(trip.date)} · 06:30
+          </p>
         </div>
         <div className="booking-layout">
           <div className="seat-card">
@@ -1049,6 +1309,8 @@ function Seats({
             </div>
           </div>
           <OrderCard
+            trip={trip}
+            passengers={trip.passengers}
             selected={selected}
             buttonText="Continue to details"
             onContinue={onContinue}
@@ -1088,39 +1350,44 @@ function Seat({
 }
 
 function OrderCard({
+  trip,
+  passengers,
   selected,
   buttonText,
   onContinue,
   payment = false,
 }: {
+  trip: SearchTrip
+  passengers: number
   selected: string[]
   buttonText: string
   onContinue: () => void
   payment?: boolean
 }) {
-  const subtotal = selected.length * 38
+  const subtotal = selected.length * 1299
+  const fee = 49
   return (
     <aside className="order-card">
       <h3>Trip summary</h3>
       <div className="order-route">
         <span className="route-dot blue" />
         <div>
-          <b>07:30 · New York</b>
-          <small>Port Authority Bus Terminal</small>
+          <b>06:30 · {trip.from}</b>
+          <small>Bus station</small>
         </div>
         <i />
         <span className="route-dot orange" />
         <div>
-          <b>12:15 · Boston</b>
-          <small>South Station</small>
+          <b>17:00 · {trip.to}</b>
+          <small>Bus station</small>
         </div>
       </div>
       <div className="order-meta">
         <span>
-          <Icon name="calendar" size={17} /> Fri, June 20
+          <Icon name="calendar" size={17} /> {formatTripDate(trip.date)}
         </span>
         <span>
-          <Icon name="clock" size={17} /> 4h 45m · Direct
+          <Icon name="clock" size={17} /> 10h 30m · Direct
         </span>
         <span>
           <Icon name="bus" size={17} /> Velora Express
@@ -1129,18 +1396,18 @@ function OrderCard({
       <div className="price-lines">
         <div>
           <span>
-            {selected.length || 0} × Adult seat{" "}
+            {selected.length || passengers} × Adult seat{" "}
             {selected.length ? `(${selected.join(", ")})` : ""}
           </span>
-          <b>${subtotal}.00</b>
+          <b>₹{subtotal.toLocaleString("en-IN")}</b>
         </div>
         <div>
           <span>Booking fee</span>
-          <b>$3.50</b>
+          <b>₹{fee}</b>
         </div>
         <div className="total">
           <span>Total</span>
-          <b>${(subtotal + 3.5).toFixed(2)}</b>
+          <b>₹{(subtotal + fee).toLocaleString("en-IN")}</b>
         </div>
       </div>
       <button
@@ -1161,12 +1428,14 @@ function OrderCard({
 }
 
 function Details({
+  trip,
   traveler,
   setTraveler,
   selected,
   onBack,
   onContinue,
 }: {
+  trip: SearchTrip
   traveler: Traveler
   setTraveler: (v: typeof traveler) => void
   selected: string[]
@@ -1254,6 +1523,8 @@ function Details({
             </label>
           </div>
           <OrderCard
+            trip={trip}
+            passengers={trip.passengers}
             selected={selected}
             buttonText="Continue to payment"
             onContinue={onContinue}
@@ -1292,10 +1563,12 @@ function Field({
 }
 
 function Payment({
+  trip,
   selected,
   onBack,
   onPay,
 }: {
+  trip: SearchTrip
   selected: string[]
   onBack: () => void
   onPay: () => void
@@ -1325,7 +1598,7 @@ function Payment({
                 className={method === "wallet" ? "active" : ""}
                 onClick={() => setMethod("wallet")}
               >
-                Digital wallet
+                UPI / wallet
               </button>
             </div>
             {method === "card" ? (
@@ -1360,8 +1633,10 @@ function Payment({
             ) : (
               <div className="wallet-box">
                 <Icon name="phone" size={32} />
-                <h3>Pay with your digital wallet</h3>
-                <p>Use Apple Pay or Google Pay for a fast, secure checkout.</p>
+                <h3>Pay with UPI or your wallet</h3>
+                <p>
+                  Choose UPI, Google Pay, PhonePe, or Paytm for quick checkout.
+                </p>
                 <button className="wallet-button">Choose wallet</button>
               </div>
             )}
@@ -1374,8 +1649,10 @@ function Payment({
             </div>
           </div>
           <OrderCard
+            trip={trip}
+            passengers={trip.passengers}
             selected={selected}
-            buttonText={`Pay $${(selected.length * 38 + 3.5).toFixed(2)}`}
+            buttonText={`Pay ₹${(selected.length * 1299 + 49).toLocaleString("en-IN")}`}
             onContinue={onPay}
             payment
           />
@@ -1386,11 +1663,13 @@ function Payment({
 }
 
 function Confirmation({
+  trip,
   selected,
   traveler,
   onBookings,
   showToast,
 }: {
+  trip: SearchTrip
   selected: string[]
   traveler: Pick<Traveler, "first" | "email">
   onBookings: () => void
@@ -1421,8 +1700,8 @@ function Confirmation({
               <div>
                 <small>DEPARTURE</small>
                 <b>07:30</b>
-                <span>New York</span>
-                <em>Port Authority</em>
+                <span>{trip.from}</span>
+                <em>Bus terminal</em>
               </div>
               <div className="ticket-journey">
                 <Icon name="bus" size={19} />
@@ -1432,14 +1711,14 @@ function Confirmation({
               <div className="right">
                 <small>ARRIVAL</small>
                 <b>12:15</b>
-                <span>Boston</span>
-                <em>South Station</em>
+                <span>{trip.to}</span>
+                <em>Bus terminal</em>
               </div>
             </div>
             <div className="ticket-details">
               <div>
                 <small>DATE</small>
-                <b>Fri, June 20</b>
+                <b>{formatTripDate(trip.date)}</b>
               </div>
               <div>
                 <small>PASSENGERS</small>
@@ -1471,7 +1750,7 @@ function Confirmation({
             </div>
             <div className="paid">
               <small>PAID</small>
-              <b>${(selected.length * 38 + 3.5).toFixed(2)}</b>
+              <b>₹{(selected.length * 1299 + 49).toLocaleString("en-IN")}</b>
             </div>
           </div>
         </article>
@@ -1501,11 +1780,13 @@ function Confirmation({
 }
 
 function Bookings({
+  trip,
   cancelled,
   onCancel,
   onReschedule,
   onExplore,
 }: {
+  trip: SearchTrip
   cancelled: boolean
   onCancel: () => void
   onReschedule: () => void
@@ -1540,7 +1821,7 @@ function Bookings({
             <div className="booking-item-head">
               <div>
                 <span className="status-pill">UPCOMING</span>
-                <b>Friday, June 20</b>
+                <b>{formatTripDate(trip.date)}</b>
               </div>
               <span>
                 Booking <b>RTY-84Q2L9</b>
@@ -1558,16 +1839,16 @@ function Bookings({
               </div>
               <div className="mini-route">
                 <div>
-                  <b>07:30</b>
-                  <span>New York</span>
+                  <b>06:30</b>
+                  <span>{trip.from}</span>
                 </div>
                 <i>
                   <em />
                 </i>
-                <small>4h 45m</small>
+                <small>10h 30m</small>
                 <div>
-                  <b>12:15</b>
-                  <span>Boston</span>
+                  <b>17:00</b>
+                  <span>{trip.to}</span>
                 </div>
               </div>
               <div className="seat-info">
@@ -1684,7 +1965,7 @@ function Support({ showToast }: { showToast: (s: string) => void }) {
               </span>
               <div>
                 <small>CALL US</small>
-                <b>+1 (800) 555-0192</b>
+                <b>+91 80 4567 8900</b>
                 <em>Available 24/7</em>
               </div>
             </div>
@@ -1701,11 +1982,11 @@ function Support({ showToast }: { showToast: (s: string) => void }) {
           </div>
           <form className="form-card contact-form" onSubmit={submit}>
             <div className="form-grid">
-              <Field label="Your name" value="" placeholder="Alex Morgan" />
+              <Field label="Your name" value="" placeholder="Aarav Sharma" />
               <Field
                 label="Email address"
                 value=""
-                placeholder="alex@example.com"
+                placeholder="you@example.in"
                 type="email"
               />
             </div>
@@ -1778,7 +2059,7 @@ function AuthModal({
         </p>
         <form onSubmit={submit}>
           {mode === "signup" && (
-            <Field label="Full name" value="" placeholder="Alex Morgan" />
+            <Field label="Full name" value="" placeholder="Aarav Sharma" />
           )}
           <Field
             label="Email address"
@@ -1885,7 +2166,10 @@ function Footer({ navigate }: { navigate: (v: View) => void }) {
         </div>
       </div>
       <div className="container footer-bottom">
-        <span>© 2025 Routely, Inc.</span>
+        <span>© 2026 Routely, Inc.</span>
+        <span className="india-note">
+          <span>🇮🇳</span> Made in India, for every journey
+        </span>
         <div>
           <button>Privacy</button>
           <button>Terms</button>
